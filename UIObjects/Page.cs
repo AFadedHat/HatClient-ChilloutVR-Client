@@ -1,0 +1,328 @@
+﻿using System;
+using System.Linq;
+using BTKUILib.UIObjects.Components;
+using MelonLoader;
+
+// ReSharper disable MethodOverloadWithOptionalParameter
+
+namespace BTKUILib.UIObjects
+{
+    /// <summary>
+    /// This object represents a page that exists in Cohtml
+    /// </summary>
+    public class Page : QMUIElement
+    {
+        internal readonly ABI_RC.Systems.UI.UILib.UIObjects.Page InternalPage;
+        
+        /// <summary>
+        /// Get or set the menu title displayed at the very top of the QM, will update on the fly
+        /// </summary>
+        public string MenuTitle
+        {
+            get => InternalPage.MenuTitle;
+            set => InternalPage.MenuTitle = value;
+        }
+
+        /// <summary>
+        /// Get or set the menu subtitle displayed at the very top of the QM, will update on the fly
+        /// </summary>
+        public string MenuSubtitle
+        {
+            get => InternalPage.MenuSubtitle;
+            set => InternalPage.MenuSubtitle = value;
+        }
+
+        /// <summary>
+        /// Get or set the display name for a page, this will only work on non root pages and will update the header with whatever you set
+        /// </summary>
+        public string PageDisplayName
+        {
+            get => InternalPage.PageDisplayName;
+            set => InternalPage.PageDisplayName = value;
+        }
+
+        /// <summary>
+        /// Sets if this pages tab is visible or not
+        /// </summary>
+        public bool HideTab
+        {
+            get => InternalPage.HideTab;
+            set => InternalPage.HideTab = value;
+        }
+
+        /// <inheritdoc />
+        public override bool Hidden
+        {
+            get => InternalPage.Hidden;
+            set => InternalPage.Hidden = value;
+        }
+
+        /// <inheritdoc />
+        public override bool Disabled
+        {
+            get => InternalPage.Disabled;
+            set => InternalPage.Disabled = value;
+        }
+
+        /// <summary>
+        /// Reference to the button that opens this subpage
+        /// </summary>
+        public Button SubpageButton
+        {
+            get
+            {
+                _subpageButton ??= new Button(InternalPage.SubpageButton);
+                return _subpageButton;
+            }
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        public bool InPlayerlist
+        {
+            get => InternalPage.InPlayerlist;
+            set => InternalPage.InPlayerlist = value;
+        }
+
+        /// <summary>
+        /// Called when this page is opened
+        /// </summary>
+        public Action OnPageOpen;
+        /// <summary>
+        /// Called when this page is closed (including multiselect and other special pages)
+        /// </summary>
+        public Action OnPageClosed;
+        
+        private Button _subpageButton;
+
+        /// <summary>
+        /// Create a new page object, this will automatically be created within Cohtml when it is ready
+        /// </summary>
+        /// <param name="modName">Name of your mod, you can use this to have multiple mods use the same root tab</param>
+        /// <param name="pageName">Name of the page, this isn't visible anywhere</param>
+        /// <param name="isRootPage">Sets if this page should also generate a tab</param>
+        /// <param name="tabIcon">Icon to be displayed on the tab</param>
+        /// <param name="category">Only set if this page was created from a category</param>
+        public Page(string modName, string pageName, bool isRootPage = false, string tabIcon = null, Category category = null) : this(modName, pageName, isRootPage, tabIcon, category, false){}
+
+        /// <summary>
+        /// Create a new page object, this will automatically be created within Cohtml when it is ready
+        /// </summary>
+        /// <param name="modName">Name of your mod, you can use this to have multiple mods use the same root tab. Only alpha numeric characters work!</param>
+        /// <param name="pageName">Name of the page, this isn't visible anywhere</param>
+        /// <param name="isRootPage">Sets if this page should also generate a tab</param>
+        /// <param name="tabIcon">Icon to be displayed on the tab</param>
+        /// <param name="category">Only set if this page was created from a category</param>
+        /// <param name="noTab">Sets if this page should not generate a tab, only functions for rootpages</param>
+        public Page(string modName, string pageName, bool isRootPage, string tabIcon, Category category, bool noTab)
+        {
+            InternalPage = ABI_RC.Systems.UI.UILib.UIObjects.Page.GetOrCreatePage(modName, pageName, isRootPage, tabIcon, category?.InternalCategory, noTab);
+            InternalElement = InternalPage;
+            InternalPage.OnPageOpen += () =>
+            {
+                OnPageOpen?.Invoke();
+            };
+            InternalPage.OnPageClosed += () =>
+            {
+                OnPageClosed?.Invoke();
+            };
+        }
+
+        internal Page(ABI_RC.Systems.UI.UILib.UIObjects.Page internalPage) : base(internalPage)
+        {
+            InternalPage = internalPage;
+            InternalPage.OnPageOpen += () =>
+            {
+                OnPageOpen?.Invoke();
+            };
+            InternalPage.OnPageClosed += () =>
+            {
+                OnPageClosed?.Invoke();
+            };
+        }
+
+        /// <summary>
+        /// Attempts to get an existing page matching the modName and pageName given, otherwise creates a new page
+        /// </summary>
+        /// <param name="modName">Name of your mod, you can use this to have multiple mods use the same root tab</param>
+        /// <param name="pageName">Name of the page, this isn't visible anywhere</param>
+        /// <param name="isRootPage">Sets if this page should also generate a tab</param>
+        /// <param name="tabIcon">Icon to be displayed on the tab</param>
+        /// <param name="category">Only set if this page was created from a category</param>
+        /// <param name="noTab">Sets if this page should not generate a tab, only functions for rootpages</param>
+        /// <returns>New or existing page object</returns>
+        public static Page GetOrCreatePage(string modName, string pageName, bool isRootPage = false, string tabIcon = null, Category category = null, bool noTab = false)
+        {
+            var internalPage = ABI_RC.Systems.UI.UILib.UIObjects.Page.GetOrCreatePage(modName, pageName, isRootPage, tabIcon, category?.InternalCategory, noTab);
+            return new Page(internalPage);
+        }
+
+        /// <summary>
+        /// Opens this page in cohtml
+        /// </summary>
+        public void OpenPage()
+        {
+            OpenPage(false);
+        }
+
+        /// <summary>
+        /// Opens this page in Cohtml with optional resetBreadcrumbs param
+        /// <param name="resetBreadcrumbs">Set this true to reset the breadcrumbs back to the root page</param>
+        /// </summary>
+        public void OpenPage(bool resetBreadcrumbs)
+        {
+            OpenPage(resetBreadcrumbs, false);
+        }
+
+        /// <summary>
+        /// Opens this page in Cohtml with optional resetBreadcrumbs param and forceBreadcrumbAdd
+        /// </summary>
+        /// <param name="resetBreadcrumbs">Set this true to reset the breadcrumbs back to the root page</param>
+        /// <param name="forceBreadcrumbAdd">Set this true to allow the breadcrumbs to contain multiple of a page</param>
+        public void OpenPage(bool resetBreadcrumbs, bool forceBreadcrumbAdd)
+        {
+            InternalPage.OpenPage(resetBreadcrumbs, forceBreadcrumbAdd);
+        }
+
+        /// <summary>
+        /// Add a new category (row) to this page
+        /// </summary>
+        /// <param name="categoryName">Name of the category, displayed at the top</param>
+        /// <returns>A newly created category</returns>
+        public Category AddCategory(string categoryName)
+        {
+            return AddCategory(categoryName, true);
+        }
+
+        /// <summary>
+        /// Add a new category (row) to this page
+        /// </summary>
+        /// <param name="categoryName">Name of the category, displayed at the top</param>
+        /// <param name="showHeader">Sets if the header of this category is visible</param>
+        /// <returns></returns>
+        public Category AddCategory(string categoryName, bool showHeader)
+        {
+            return AddCategory(categoryName, showHeader, true, false);
+        }
+
+        /// <summary>
+        /// Add a new category (row) to this page
+        /// </summary>
+        /// <param name="categoryName">Name of the category, displayed at the top</param>
+        /// <param name="showHeader">Sets if the header of this category is visible</param>
+        /// <param name="canCollapse">Sets if this category can be collapsed</param>
+        /// <param name="collapsed">Sets if this category should be created as collapsed</param>
+        /// <returns></returns>
+        public Category AddCategory(string categoryName, bool showHeader, bool canCollapse = true, bool collapsed = false)
+        {
+            return AddCategory(categoryName, null, showHeader, canCollapse, collapsed);
+        }
+
+        /// <summary>
+        /// Add a new category to this page, modName should be null unless this is a protected page (PlayerSelectPage or Misc page)
+        /// </summary>
+        /// <param name="categoryName">Name of the category, displayed at the top</param>
+        /// <param name="modName">Name of the mod creating the category, this must match your prepared icon modname to use icons</param>
+        /// <param name="showHeader">Sets if the header of this category is visible</param>
+        /// <param name="canCollapse">Sets if this category can be collapsed</param>
+        /// <param name="collapsed">Sets if this category should be created as collapsed</param>
+        /// <returns></returns>
+        public Category AddCategory(string categoryName, string modName, bool showHeader, bool canCollapse, bool collapsed)
+        {
+            var internalCat = InternalPage.AddCategory(categoryName, modName, showHeader, canCollapse, collapsed);
+            return new Category(internalCat);
+        }
+        
+        /// <summary>
+        /// Add a new category to this page, for use on Protected pages only
+        /// </summary>
+        /// <param name="categoryName">Name of the category, displayed at the top</param>
+        /// <param name="modName">Name of the mod creating the category, should match other usages</param>
+        /// <returns>A newly created category</returns>
+        public Category AddCategory(string categoryName, string modName)
+        {
+            var internalCat = InternalPage.AddCategory(categoryName, modName);
+
+            return new Category(internalCat);
+        }
+
+        /// <summary>
+        /// Create a slider on the page
+        /// </summary>
+        /// <param name="sliderName">Name of the slider, displayed above the slider</param>
+        /// <param name="sliderTooltip">Tooltip displayed when hovering on the slider</param>
+        /// <param name="initialValue">Initial value of the slider</param>
+        /// <param name="minValue">Minimum value that the slider can slide to</param>
+        /// <param name="maxValue">Maximum value the slider can slide to</param>
+        /// <returns></returns>
+        [Obsolete("You should move to using Category.AddSlider instead of Page.AddSlider! This function may be removed in future versions of UILib!")]
+        public SliderFloat AddSlider(string sliderName, string sliderTooltip, float initialValue, float minValue, float maxValue)
+        {
+            return AddSlider(sliderName, sliderTooltip, initialValue, minValue, maxValue, 2, 0f, false);
+        }
+
+        /// <summary>
+        /// Create a slider on the page
+        /// </summary>
+        /// <param name="sliderName">Name of the slider, displayed above the slider</param>
+        /// <param name="sliderTooltip">Tooltip displayed when hovering on the slider</param>
+        /// <param name="initialValue">Initial value of the slider</param>
+        /// <param name="minValue">Minimum value that the slider can slide to</param>
+        /// <param name="maxValue">Maximum value the slider can slide to</param>
+        /// <param name="decimalPlaces">Set the number of decimal places displayed on the slider</param>
+        /// <returns></returns>
+        [Obsolete("You should move to using Category.AddSlider instead of Page.AddSlider! This function may be removed in future versions of UILib!")]
+        public SliderFloat AddSlider(string sliderName, string sliderTooltip, float initialValue, float minValue, float maxValue, int decimalPlaces)
+        {
+            return AddSlider(sliderName, sliderTooltip, initialValue, minValue, maxValue, decimalPlaces, 0f, false);
+        }
+
+        /// <summary>
+        /// Create a slider on the page
+        /// </summary>
+        /// <param name="sliderName">Name of the slider, displayed above the slider</param>
+        /// <param name="sliderTooltip">Tooltip displayed when hovering on the slider</param>
+        /// <param name="initialValue">Initial value of the slider</param>
+        /// <param name="minValue">Minimum value that the slider can slide to</param>
+        /// <param name="maxValue">Maximum value the slider can slide to</param>
+        /// <param name="decimalPlaces">Set the number of decimal places displayed on the slider</param>
+        /// <param name="defaultValue">Default value for this slider</param>
+        /// <param name="allowReset">Allow this slider to be reset using the reset button</param>
+        /// <returns></returns>
+        [Obsolete("You should move to using Category.AddSlider instead of Page.AddSlider! This function may be removed in future versions of UILib!")]
+        public SliderFloat AddSlider(string sliderName, string sliderTooltip, float initialValue, float minValue, float maxValue, int decimalPlaces, float defaultValue, bool allowReset)
+        {
+            var internalSlider = InternalPage.AddSlider(sliderName, sliderTooltip, initialValue, minValue, maxValue, decimalPlaces, defaultValue, allowReset);
+
+            return new SliderFloat(internalSlider);
+        }
+
+        /// <summary>
+        /// Adds a Category to this Page with it's Collapsed value controlled by a MelonPref
+        /// </summary>
+        /// <param name="entry">MelonPreferences_Entry to store the state of Collapsed</param>
+        /// <param name="showHeader">Sets if the header of this category is visible</param>
+        /// <returns>Generated Category configured with it's OnCollapse set to save to a MelonPref</returns>
+        public Category AddMelonCategory(MelonPreferences_Entry<bool> entry, bool showHeader = true)
+        {
+            Category category = AddCategory(entry.DisplayName, showHeader, true, !entry.Value);
+            category.OnCollapse += b => entry.Value = !b;
+            return category;
+        }
+
+        /// <inheritdoc />
+        public override void Delete()
+        {
+            InternalPage.Delete();
+        }
+        
+        /// <summary>
+        /// Deletes all children of this page
+        /// </summary>
+        public void ClearChildren()
+        {
+            InternalPage.ClearChildren();
+        }
+    }
+}
