@@ -1,3 +1,7 @@
+# DISCORD SERVER
+- if you wanna join
+- https://discord.gg/eqyfAymHGK
+
 # HatClient-ChilloutVR-Client
 
 Basic features for now as I have not put much effort into this
