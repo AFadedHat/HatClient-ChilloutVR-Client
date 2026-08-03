@@ -4,9 +4,13 @@
 
 # HatClient-ChilloutVR-Client
 
-Basic features for now as I have not put much effort into this
-if this gets more traction i may continue updating this
+ - Basic features for now as I have not put much effort into this
+ - if this gets more traction i may continue updating this
 
+# Requirements
+- melonloader
+- thats it
+ 
 # Features
 Movement 
  - Flight (Directional) 
