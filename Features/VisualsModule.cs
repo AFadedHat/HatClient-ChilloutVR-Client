@@ -12,8 +12,13 @@ namespace BTKUILib.Features
     internal static class VisualsModule
     {
         private static bool _espEnabled;
+        private static bool _nameplatesEnabled;
         private static MelonPreferences_Entry<bool> _espPref;
+        private static MelonPreferences_Entry<bool> _nameplatesPref;
+        
         private static ToggleButton _espToggleUI;
+        private static ToggleButton _nameplatesToggleUI;
+        
         private static Material _espMaterial;
         
         private static Dictionary<string, GameObject> _activeCapsules = new Dictionary<string, GameObject>();
@@ -21,7 +26,10 @@ namespace BTKUILib.Features
         internal static void Init(MelonPreferences_Category prefCategory)
         {
             _espPref = prefCategory.CreateEntry("ESPEnabled", false, "ESP", "See players through walls");
+            _nameplatesPref = prefCategory.CreateEntry("ESPNameplatesEnabled", false, "ESP Nameplates", "Show player names above ESP");
+            
             _espEnabled = _espPref.Value;
+            _nameplatesEnabled = _nameplatesPref.Value;
 
             try
             {
@@ -54,14 +62,27 @@ namespace BTKUILib.Features
 
         internal static void GenerateUI(Category parentCategory)
         {
-            _espToggleUI = parentCategory.AddToggle("ESP (See Players)", "Draws a capsule around players visible through walls", _espEnabled);
+            _espToggleUI = parentCategory.AddToggle("Capsule ESP", "Draws a capsule around players visible through walls", _espEnabled);
             _espToggleUI.OnValueUpdated += b =>
             {
                 _espEnabled = b;
                 _espPref.Value = b;
                 MelonPreferences.Save();
 
-                if (!_espEnabled)
+                if (!_espEnabled && !_nameplatesEnabled)
+                {
+                    ClearAllCapsules();
+                }
+            };
+
+            _nameplatesToggleUI = parentCategory.AddToggle("ESP Nameplates", "Shows player names above their ESP capsules", _nameplatesEnabled);
+            _nameplatesToggleUI.OnValueUpdated += b =>
+            {
+                _nameplatesEnabled = b;
+                _nameplatesPref.Value = b;
+                MelonPreferences.Save();
+
+                if (!_espEnabled && !_nameplatesEnabled)
                 {
                     ClearAllCapsules();
                 }
@@ -70,7 +91,7 @@ namespace BTKUILib.Features
 
         internal static void OnUpdate()
         {
-            if (!_espEnabled) return;
+            if (!_espEnabled && !_nameplatesEnabled) return;
 
             try
             {
@@ -89,6 +110,7 @@ namespace BTKUILib.Features
                     {
                         var cap = new GameObject($"HatClient_ESP_{player.Uuid}");
                         
+                        // LineRenderer Capsule
                         var lr = cap.AddComponent<LineRenderer>();
                         if (_espMaterial != null)
                             lr.material = _espMaterial;
@@ -114,12 +136,49 @@ namespace BTKUILib.Features
                             points[i + 16] = new Vector3(Mathf.Cos(angle) * radius, -halfHeight + Mathf.Sin(angle) * radius, 0);
                         }
                         lr.SetPositions(points);
+
+                        // TextMesh Nameplate
+                        var textObj = new GameObject("Nameplate");
+                        textObj.transform.SetParent(cap.transform);
+                        textObj.transform.localPosition = new Vector3(0, 1.2f, 0); // Hover above capsule
+                        
+                        var tm = textObj.AddComponent<TextMesh>();
+                        tm.text = player.Username;
+                        tm.characterSize = 0.05f;
+                        tm.fontSize = 64;
+                        tm.anchor = TextAnchor.MiddleCenter;
+                        tm.alignment = TextAlignment.Center;
+                        tm.color = Color.magenta;
+
+                        var textRenderer = textObj.GetComponent<MeshRenderer>();
+                        if (textRenderer != null && textRenderer.sharedMaterial != null)
+                        {
+                            var fontMat = new Material(textRenderer.sharedMaterial);
+                            fontMat.SetInt("_ZTest", (int)CompareFunction.Always);
+                            textRenderer.sharedMaterial = fontMat;
+                        }
                         
                         _activeCapsules[player.Uuid] = cap;
                     }
 
                     var capObj = _activeCapsules[player.Uuid];
                     capObj.transform.position = player.PlayerObject.transform.position + new Vector3(0, 1f, 0);
+
+                    var lineRenderer = capObj.GetComponent<LineRenderer>();
+                    if (lineRenderer != null)
+                        lineRenderer.enabled = _espEnabled;
+
+                    var nameplateObj = capObj.transform.Find("Nameplate");
+                    if (nameplateObj != null)
+                    {
+                        var nameplateTm = nameplateObj.GetComponent<TextMesh>();
+                        if (nameplateTm != null)
+                        {
+                            nameplateObj.gameObject.SetActive(_nameplatesEnabled);
+                            if (_nameplatesEnabled)
+                                nameplateTm.text = player.Username;
+                        }
+                    }
                     
                     var camera = Camera.main;
                     if (camera != null)

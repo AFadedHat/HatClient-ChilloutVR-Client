@@ -21,6 +21,7 @@ namespace BTKUILib.Features
         private static ToggleButton _flightToggleUI;
         private static ToggleButton _noclipToggleUI;
         private static ToggleButton _speedhackToggleUI;
+        private static SliderFloat _speedSliderUI;
 
         private static float _baseWalkSpeed = -1f;
         private static float _baseFlySpeed = -1f;
@@ -56,18 +57,18 @@ namespace BTKUILib.Features
                     ApplyNoclip(_noclipEnabled);
             };
 
-            var speedSlider = parentCategory.AddSlider("Speed Multiplier", "Adjust speed multiplier", _speedPref.Value, 1f, 10f, 1, 2f, true);
-            speedSlider.Hidden = !_speedhackEnabled;
+            _speedSliderUI = parentCategory.AddSlider("Speed Multiplier", "Adjust speed multiplier", _speedPref.Value, 1f, 10f, 1, 2f, true);
+            _speedSliderUI.Hidden = !_speedhackEnabled;
 
             _speedhackToggleUI = parentCategory.AddToggle("Speedhack", "Multiply walk and flight speed", _speedhackEnabled);
             _speedhackToggleUI.OnValueUpdated += b =>
             {
                 _speedhackEnabled = b;
-                speedSlider.Hidden = !b;
+                _speedSliderUI.Hidden = !b;
                 ApplySpeedhack(b);
             };
 
-            speedSlider.OnValueUpdated += f =>
+            _speedSliderUI.OnValueUpdated += f =>
             {
                 _speedMultiplier = f;
                 _speedPref.Value = f;
@@ -80,7 +81,24 @@ namespace BTKUILib.Features
 
         internal static void OnUpdate()
         {
+            if (Input.GetKey(KeyCode.LeftAlt))
+            {
+                float scroll = Input.mouseScrollDelta.y;
+                if (scroll != 0)
+                {
+                    _speedMultiplier += scroll * 0.5f;
+                    _speedMultiplier = Mathf.Clamp(_speedMultiplier, 1f, 10f);
+                    
+                    _speedPref.Value = _speedMultiplier;
+                    MelonPreferences.Save();
 
+                    if (_speedSliderUI != null)
+                        _speedSliderUI.SetSliderValue(_speedMultiplier);
+
+                    if (_speedhackEnabled)
+                        ApplySpeedhack(true);
+                }
+            }
         }
 
         private static void ToggleFlight()

@@ -14,7 +14,7 @@ namespace BTKUILib
         public const string Name = "HatClient | Internal";
         public const string Author = "TwoFadedHats Team";
         public const string Company = "TwoFadedHats";
-        public const string Version = "1.0";
+        public const string Version = "1.0.1";
     }
     
     internal class BTKUILib : MelonMod
@@ -40,7 +40,7 @@ namespace BTKUILib
 
             try
             {
-                System.Console.Title = "HatClient | Internal | ChilloutVR";
+                System.Console.Title = "HatClient | Internal | Version: v1.0.1 | ChilloutVR";
             }
             catch (System.Exception ex)
             {
@@ -78,6 +78,7 @@ namespace BTKUILib
             VisualsModule.OnUpdate();
             TeleportPropsModule.OnUpdate();
             MiscModule.OnUpdate();
+            ExploitsModule.OnUpdate();
         }
 
   
@@ -97,6 +98,7 @@ namespace BTKUILib
             TeleportPropsModule.Init();
             VisualsModule.Init(_hatClientPrefs);
             MiscModule.Init(_hatClientPrefs);
+            ExploitsModule.Init(_hatClientPrefs);
 
             Log.Msg("HatClient features initialized!");
         }
@@ -109,8 +111,8 @@ namespace BTKUILib
             Log.Msg("Generating HatClient Quick Menu tab...");
 
             var hatPage = Page.GetOrCreatePage("HatClient", "Main", true, "Star");
-            hatPage.MenuTitle = "HatClient";
-            hatPage.MenuSubtitle = "Created and Developed by TwoFadedHats Team";
+            hatPage.MenuTitle = "HatClient Internal | Version: v1.0.1";
+            hatPage.MenuSubtitle = "Made By AFadedHat | Welcome!";
 
 
             var flightCat = hatPage.AddCategory("Movements");
@@ -119,12 +121,13 @@ namespace BTKUILib
             var visualsCat = hatPage.AddCategory("Visuals");
             VisualsModule.GenerateUI(visualsCat);
 
-            var miscCat = hatPage.AddCategory("Exploits");
-            MiscModule.GenerateUI(miscCat);
+            var exploitsCat = hatPage.AddCategory("Exploits");
+            ExploitsModule.GenerateUI(exploitsCat);
 
             var subPagesCat = hatPage.AddCategory("Misc");
             BookmarksModule.GenerateUI(subPagesCat);
             KeybindModule.GenerateUI(subPagesCat);
+            MiscModule.GenerateUI(subPagesCat);
             StatsOverlayModule.GenerateUI(subPagesCat);
 
             TeleportPropsModule.GenerateUI();
