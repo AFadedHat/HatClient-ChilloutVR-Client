@@ -12,23 +12,28 @@
 - thats it
  
 # Features
-Movement 
+###Movement 
  - Flight (Directional) 
  - Noclip 
  - Speed 
 
-Visuals
+###Visuals
  - Capsule ESP
+ - Nameplate ESP
 
-Exploits
+###Exploits
  - Spam Last Prop
 
-Misc
+###Misc
  - World Bookmarks
  - Keybind Selector
  - FPS Counter
+ - Night Vision
+ - Personal Flashlight
+ - Anti Portal Exploits
+ - Join/Leave Notifications
 
-Selected Player
+###Selected Player
  - Teleport Props (shows other props but only yours show globally)
  - Prop Orbit (same as before)
  - Teleport
